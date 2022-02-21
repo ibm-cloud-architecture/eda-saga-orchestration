@@ -3,6 +3,7 @@ package com.ibm.telco.som;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@EntityScan("com.ibm.telco.som")
 @RestController
 @RequestMapping("/api")
 public class SomRepoController
@@ -18,23 +20,23 @@ public class SomRepoController
     private final Logger log = LoggerFactory.getLogger(SomRepoController.class);
 
     @Autowired
-    SomRepository somRepository;
+    SomMysqlRepository somRepository;
 
-    //retrieve all SomOrders
-    @GetMapping("/somorder")
-    public ResponseEntity<List<SomOrder>> getAllSomOrders(@RequestParam(required = false) String key)
+    //retrieve all Payloads
+    @GetMapping("/payload")
+    public ResponseEntity<List<SomPayloadEntity>> getAllPayloads(@RequestParam(required = false) String key)
     {
-        log.info("...in getAllSomOrders()");
+        log.info("...in getAllPayloads()");
         try
         {
-            List<SomOrder> somOrders = new ArrayList<>();
-            somRepository.findAll().forEach(somOrders::add);
+            List<SomPayloadEntity> payloads = new ArrayList<>();
+            somRepository.findAll().forEach(payloads::add);
 
-            if (somOrders.isEmpty())
+            if (payloads.isEmpty())
             {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(somOrders, HttpStatus.OK);
+            return new ResponseEntity<>(payloads, HttpStatus.OK);
         } catch (Exception e)
         {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -42,16 +44,16 @@ public class SomRepoController
 
     }
 
-    //retrieve a SomOrder by key
-    @GetMapping("/somorder/{key}")
-    public ResponseEntity<SomOrder> getOrderByKey(@PathVariable("key") String key)
+    //retrieve a Payload by key
+    @GetMapping("/payload/{key}")
+    public ResponseEntity<SomPayloadEntity> getPayloadByKey(@PathVariable("key") String key)
     {
-        log.info("...in getOrderByKey()");
-        Optional<SomOrder> somOrder = Optional.ofNullable(somRepository.findByKey(key));
-        if (somOrder.isPresent())
+        log.info("...in getPayloadByKey()");
+        Optional<SomPayloadEntity> payload = Optional.ofNullable(somRepository.findByPayloadKey(key));
+        if (payload.isPresent())
         {
-            log.info("Found this order: \n" +somOrder);
-            return new ResponseEntity<>(somOrder.get(), HttpStatus.OK);
+            log.info("Found this payload: \n" +payload);
+            return new ResponseEntity<>(payload.get(), HttpStatus.OK);
         }
         else
         {
@@ -61,37 +63,37 @@ public class SomRepoController
 
     }
 
-    //create a new SomOrder
-    @PostMapping("/somorder")
-    public ResponseEntity<SomOrder> createOrder(@RequestBody SomOrder somOrder)
+    //create a new Payload
+    @PostMapping("/payload")
+    public ResponseEntity<SomPayloadEntity> createPayload(@RequestBody SomPayloadEntity payload)
     {
-        log.info("...in createOrder(). Creating this order:\n" +somOrder.toString());
+        log.info("...in createPayload(). Creating this payload:\n" +payload.toString());
         try
         {
-            SomOrder _somOrder = somRepository.save(new SomOrder(somOrder.getKey(), somOrder.getOrder()));
-            log.info("...created order:\n" + _somOrder);
-            return new ResponseEntity<>(_somOrder, HttpStatus.CREATED);
+            SomPayloadEntity _payload = somRepository.save(new SomPayloadEntity(payload.getPayloadKey(), payload.getPayload()));
+            log.info("...created payload:\n" + _payload);
+            return new ResponseEntity<>(_payload, HttpStatus.CREATED);
         }
         catch (Exception e)
         {
-            log.error("Error occurred creating new order\n" + somOrder);
+            log.error("Error occurred creating new payload\n" + payload);
             log.error(e.getLocalizedMessage());
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    //update a SomOrder by key
-    @PutMapping("/somorder/{key}")
-    public ResponseEntity<SomOrder> updateOrder(@PathVariable("key") String key, @RequestBody SomOrder somOrder)
+    //update a Payload by key
+    @PutMapping("/payload/{key}")
+    public ResponseEntity<SomPayloadEntity> updatePayload(@PathVariable("key") String key, @RequestBody SomPayloadEntity payload)
     {
-        log.info("...in updateOrder(). Updating this order:\n" +somOrder);
-        Optional<SomOrder> targetSomOrder = Optional.ofNullable(somRepository.findByKey(key));
-        if (targetSomOrder.isPresent())
+        log.info("...in updatePayload(). Updating this payload:\n" +payload);
+        Optional<SomPayloadEntity> targetPayload = Optional.ofNullable(somRepository.findByPayloadKey(key));
+        if (targetPayload.isPresent())
         {
-            SomOrder _somOrder = targetSomOrder.get();
-            _somOrder.setKey(key);
-            _somOrder.setOrder(somOrder.getOrder());
-            return new ResponseEntity<>(somRepository.save(_somOrder), HttpStatus.OK);
+            SomPayloadEntity _payload = targetPayload.get();
+            _payload.setPayloadKey(key);
+            _payload.setPayload(payload.getPayload());
+            return new ResponseEntity<>(somRepository.save(_payload), HttpStatus.OK);
         }
         else
         {
@@ -100,14 +102,14 @@ public class SomRepoController
 
     }
 
-    //delete a SomOrder by key
-    @DeleteMapping("/somorder/{key}")
-    public ResponseEntity<HttpStatus> deleteOrder(@PathVariable("key") String key)
+    //delete a Payload by key
+    @DeleteMapping("/payload/{key}")
+    public ResponseEntity<HttpStatus> deletePayload(@PathVariable("key") String key)
     {
-        log.info("...in deleteOrder() held by this key: "+key);
+        log.info("...in deletePayload() held by this key: "+key);
         try
         {
-            somRepository.deleteByKey(key);
+            somRepository.deleteById(key);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         catch (Exception e)
@@ -117,10 +119,10 @@ public class SomRepoController
     }
 
     //delete all 
-    @DeleteMapping("/somorder")
+    @DeleteMapping("/payload")
     public ResponseEntity<HttpStatus> deleteAll()
     {
-        log.info("...in deleteAll() \n CAUTION: ABOUT TO DELETE ALL ORDERS IN THE DATABASE");
+        log.warn("...in deleteAll() \n CAUTION: ABOUT TO DELETE ALL PAYLOADS IN THE DATABASE");
         try
         {
             somRepository.deleteAll();
