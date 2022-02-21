@@ -11,7 +11,7 @@
 	<groupId>com.ibm.telco.som</groupId>
 	<artifactId>som</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>SOM Persistence</name>
 	<description>Persistence layer for SOM Simulator</description>
 	<properties>
