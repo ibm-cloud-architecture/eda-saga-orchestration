@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/telco-integrator-ms.iml" filepath="$PROJECT_DIR$/telco-integrator-ms.iml" />
+      <module fileurl="file://$PROJECT_DIR$/microservices.iml" filepath="$PROJECT_DIR$/microservices.iml" />
     </modules>
   </component>
 </project>
