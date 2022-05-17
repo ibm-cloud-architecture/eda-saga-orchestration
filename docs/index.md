@@ -11,7 +11,7 @@ Adoption of one data source per microservice negates ACID semantics and poses a 
 transactions across microservices. With an event backbone at the heart of event-driven architecture, two-phase commit 
 is no longer viable. Enter the Saga Pattern.
 
-Introduced in 1987 [by Hector Garcaa-Molrna Kenneth Salem paper](https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf) 
+Introduced in a 1987 paper by [Hector Garcia-Molina and Kenneth Salem](https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf), 
 the Saga pattern is designed to support long-running transactions that can be further broken down into a collection of 
 sub-transactions which can be interleaved with other transactions in multiple ways.
 
