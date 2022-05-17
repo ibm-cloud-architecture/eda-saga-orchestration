@@ -2,8 +2,8 @@
 
 ## Context
 Business processes implemented in the Business Process Execution Language (BPEL) describe orchestration of participating services
-using control graphs, variables to main state of long-running processes, sophisticated transaction boundaries and extended 
-support for compensation when the process transitions into an error state. A database is typically used to allow long-running 
+using control graphs, variables modeling state transitions of long-running processes, sophisticated transaction boundaries, and 
+offer extended support for compensation when the process transitions into an error state. A database is typically used to allow long-running 
 processes to execute multiple transactions involving multiple resource managers using two-phase commit to ensure Atomic, 
 Consistent, Isolated, and Durable (ACID) properties.
 
