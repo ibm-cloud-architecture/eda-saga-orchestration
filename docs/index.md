@@ -46,7 +46,7 @@ needs to listen to transaction outcomes from all participants.
 
 The happy path is illustrated in the diagram below:
 
-![saga](./images/HappyPath.png)
+![Happy Path](./images/HappyPath.png)
 
 1. Upon the request to create an order, the OrderServiceSaga creates an order and sends an OrderCreatedEvent to the event broker.
 2. The Saga receives an acknowledgement that the event has been successfully published and gives the caller a new Order ID. 
@@ -60,7 +60,7 @@ The happy path is illustrated in the diagram below:
 
 
 ### Error Path with Compensation
-
+![Happy Path](./images/ErrorPath.png)
 
 
 ### Code Repositories
