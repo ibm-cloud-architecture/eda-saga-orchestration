@@ -8,19 +8,27 @@ With microservice each transaction updates data within a single service, each su
 
 ## Implementation explanation
 
-We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where an order, to carry fresh goods from an origin port to a destination port, is created by a customer. The Choreography variant of the SAGA pattern, done with Kafka, involves strong decoupling between services, and each participants listen to facts and act on them independently. So each service will have at least one topic representing states on their own entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
+We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where a customer creates an order to carry fresh goods from an origin port to a destination port. The Orchestration variant of the SAGA pattern, leveraging Kafka, involves strong decoupling between services, and each participants listen to facts and act on them independently. So each service will have at least one topic representing states on their own entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
 
 ![orchestration](./images/saga-orchestration.png)
 
 The figure above illustrates that each services uses its own topic in Kafka, so to manage the saga the Order service needs to listen to all participants outcome.
 
-The happy path looks like in the following sequence diagram:
+The happy path is illustrated diagram:
 
-![saga](./images/saga-flow-1.png)
+![saga](./images/HappyPath.png)
 
-In this scenario, we have a long running transaction that spans across the Order Command microservice that creates the order and maintains the state of it, to the Reefer manager microservice that will try to find an empty container with enough capacity in the origin port to support the order, to the Voyage microservice that will try to find a voyage from the origin port to the destination port with enough capacity on the ship for the refrigerator containers.
+1. Upon the request to create an order, the OrderServiceSaga creates an order and sends an OrderCreatedEvent to the event broker.
+2. The Saga receives an acknowledgement that the event has been succssfully published. 
+3. The next order of things is to reserve a voyage. The Saga issues the command ReserveVoyageCmd.
+4. The VoyagerMS microservice consumes this event which causes it to reserve a voyage.
+5. With a voyage successfully reserved, VoyagerMS sends a VoyageAllocatedEvent to signal successful completion.
+6. The saga consumes this event which prompts it to transition to the next activity
+7. With a voyage booked we now need a reefer. The Saga reserves a reefer by issuing a ReserveReeferCmd command.
+8. The ContainerMS is in charge of reefer reservations. It verifies availability of reefers, grabs a reefer and responds with a ReeferReservedEvent.
+9. At this point all microservices have successfully executed and the saga ends the transaction with an OrderAssignedEvent.
 
-As you can see in the diagram above, the transaction does not finish until a reefer has been allocated and a voyage assigned to the order and, as a result, the order stays in pending state until all the sub transactions have successfully finished.
+
 
 ### Code repositories
 
