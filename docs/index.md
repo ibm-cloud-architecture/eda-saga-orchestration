@@ -2,7 +2,7 @@
 
 ## Context
 Business processes implemented in the Business Process Execution Language (BPEL) describe orchestration of participating services
-control graphs , variables to main state of long-running processes, sophisticated transaction boundaries and extended 
+using control graphs, variables to main state of long-running processes, sophisticated transaction boundaries and extended 
 support for compensation when the process transitions into an error state. A database is typically used to allow long-running 
 processes to execute multiple transactions involving multiple resource managers using two-phase commit to ensure Atomic, 
 Consistent, Isolated, and Durable (ACID) properties.
@@ -11,7 +11,7 @@ Adoption of one data source per microservice negates ACID semantics and poses a 
 transactions across microservices. With an event backbone at the heart of event-driven architecture, two-phase commit 
 is no longer viable. Enter the Saga Pattern.
 
-Introduced in 1987 [by Hector Garcaa-Molrna Kenneth Salem paper](https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf) 
+Introduced in a 1987 paper by [Hector Garcia-Molina and Kenneth Salem](https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf), 
 the Saga pattern is designed to support long-running transactions that can be further broken down into a collection of 
 sub-transactions which can be interleaved with other transactions in multiple ways.
 
@@ -21,24 +21,35 @@ the previous completion.
 ## Implementation Explained
 
 We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where a 
-customer creates an order to carry fresh goods from an origin port to a destination port. The Orchestration variant 
-of the SAGA pattern, leveraging Kafka, involves strong decoupling between services, and each participants listen to 
-facts and act on them independently. So each service will have at least one topic representing states on their own 
-entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
+customer creates an order to carry fresh goods from an origin port to a destination port. We have seen that the 
+[Choreograhy variant](https://ibm-cloud-architecture.github.io/eda-saga-choreography/) 
+of the Saga Pattern leverages Kafka and there is strong decoupling of services as each participant listens to 
+events and acts on them independently. Each service has at least one topic representing states on its own 
+entities. 
+
+In contrast, the Orchestration variant of the Saga Pattern specifies an Orchestrator that coordinates things across all 
+participating microservices (much like an Orchestra Conductor). The Orchestrator goes into service after it receives a
+command from a caller. Using commands and evaluating responses to those commands, the Orchestration Saga implements 
+a sequence of service calls by issuing commands to participating microservices. Every successful command results in a 
+transition to the command. A command failure causes the Saga to transition into a Compensation sequence where previously
+completed commands are rolled back.
+
+In the figure below the saga is managed in the context of the order microservice in one of the business function like
+`createOrder`.
 
 ![orchestration](./images/saga-orchestration.png)
 
 The figure above shows that each services uses its own topic in Kafka. In order to manage the saga, the Order service 
 needs to listen to transaction outcomes from all participants.
 
-## Happy Path
+### Happy Path
 
 The happy path is illustrated in the diagram below:
 
 ![saga](./images/HappyPath.png)
 
 1. Upon the request to create an order, the OrderServiceSaga creates an order and sends an OrderCreatedEvent to the event broker.
-2. The Saga receives an acknowledgement that the event has been succssfully published. 
+2. The Saga receives an acknowledgement that the event has been successfully published and gives the caller a new Order ID. 
 3. The next order of things is to reserve a voyage. The Saga issues the command ReserveVoyageCmd.
 4. The VoyagerMS microservice consumes this event which causes it to reserve a voyage.
 5. With a voyage successfully reserved, VoyagerMS sends a VoyageAllocatedEvent to signal successful completion.
@@ -48,16 +59,20 @@ The happy path is illustrated in the diagram below:
 9. At this point all microservices have successfully executed and the saga ends the transaction with an OrderAssignedEvent.
 
 
+### Error Path with Compensation
+
+
 
 ### Code Repositories
 
-The new implementation of the services are done with Quarkus and Microprofile Messaging.
+The new implementation of the services is done using Quarkus and Microprofile Messaging.
 
 * [Order Microservice](https://github.com/ibm-cloud-architecture/refarch-kc-order-cmd-ms)
 * [Reefer Microsercice](https://github.com/ibm-cloud-architecture/refarch-kc-reefer-ms)
 * [Voyage Microservice](https://github.com/ibm-cloud-architecture/refarch-kc-voyage-ms)
 
-Each code structure is based on the domain-driven-design practice with clear separation between layers (app, domain, infrastructure) and keep the domain layer using the ubiquituous language of each domain: order, reefer, and voyage.
+Each code structure is based on Domain-Driven Design, with clear separation between layers (app, domain, infrastructure)
+allowing each domain layer (order, reefer, and voyage) to be implemented using its own language of choice.
 
 ```
 │   │   │   └── ibm
@@ -101,7 +116,9 @@ Each code structure is based on the domain-driven-design practice with clear sep
 Events are defined in the infrastructure level, as well as the JAX-RS APIs.
 ### Compensation
 
-The SAGA pattern comes with the tradeoff that a compensation process must also be implemented in the case that one, or multiple, of the sub transactions fails or does not achieve to complete so that the system rolls back to the initial state before the transaction began.
+The SAGA pattern comes with the tradeoff that a compensation process must also be implemented in the case that one, or 
+multiple, of the sub transactions fails or does not achieve to complete so that the system rolls back to the initial 
+state before the transaction began.
 
 In our specific case, a new order creation transaction can fail either because we can not find a refrigerator container to be allocated to the order or we can not find a voyage to assigned to the order.
 
