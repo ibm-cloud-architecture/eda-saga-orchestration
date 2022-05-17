@@ -16,7 +16,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
 
-import ibm.eda.kc.orderms.domain.OrderService;
+import ibm.eda.kc.orderms.domain.OrderServiceSaga;
 import ibm.eda.kc.orderms.domain.ShippingOrder;
 
 @RequestScoped
@@ -26,7 +26,7 @@ import ibm.eda.kc.orderms.domain.ShippingOrder;
 public class ShippingOrderResource {
     
     @Inject
-    OrderService serv;
+    OrderServiceSaga saga;
 
     @POST
     @APIResponse(
@@ -41,11 +41,11 @@ public class ShippingOrderResource {
             description = "Retrieves and returns the JVM system properties from the system "
             + "service running on the particular host.")
     public ShippingOrder createOrder(ShippingOrder order) {
-        return serv.createOrder(order);
+        return saga.createOrder(order);
     }
 
     @GET
     public List<ShippingOrder> getAll() {
-        return serv.getAllOrders();
+        return saga.getAllOrders();
     }
 }
