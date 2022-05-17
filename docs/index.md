@@ -1,20 +1,39 @@
-# Saga Orchestration demonstration
+# Saga Orchestration Pattern: An Implementation
 
 ## Context
+Business processes implemented in the Business Process Execution Language (BPEL) describe orchestration of participating services
+control graphs , variables to main state of long-running processes, sophisticated transaction boundaries and extended 
+support for compensation when the process transitions into an error state. A database is typically used to allow long-running 
+processes to execute multiple transactions involving multiple resource managers using two-phase commit to ensure Atomic, 
+Consistent, Isolated, and Durable (ACID) properties.
 
-Introduced in 1987 [by Hector Garcaa-Molrna Kenneth Salem paper](https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf) the Saga pattern helps to support a long running transaction that can be broken up to a collection of sub transactions that can be interleaved any way with other transactions.
+Adoption of one data source per microservice negates ACID semantics and poses a challenge to the support of long-running 
+transactions across microservices. With an event backbone at the heart of event-driven architecture, two-phase commit 
+is no longer viable. Enter the Saga Pattern.
 
-With microservice each transaction updates data within a single service, each subsequent steps may be triggered by previous completion. 
+Introduced in 1987 [by Hector Garcaa-Molrna Kenneth Salem paper](https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf) 
+the Saga pattern is designed to support long-running transactions that can be further broken down into a collection of 
+sub-transactions which can be interleaved with other transactions in multiple ways.
 
-## Implementation explanation
+With microservices, each transaction updates data within a single service and each subsequent step may be triggered by 
+the previous completion. 
 
-We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where a customer creates an order to carry fresh goods from an origin port to a destination port. The Orchestration variant of the SAGA pattern, leveraging Kafka, involves strong decoupling between services, and each participants listen to facts and act on them independently. So each service will have at least one topic representing states on their own entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
+## Implementation Explained
+
+We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where a 
+customer creates an order to carry fresh goods from an origin port to a destination port. The Orchestration variant 
+of the SAGA pattern, leveraging Kafka, involves strong decoupling between services, and each participants listen to 
+facts and act on them independently. So each service will have at least one topic representing states on their own 
+entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
 
 ![orchestration](./images/saga-orchestration.png)
 
-The figure above illustrates that each services uses its own topic in Kafka, so to manage the saga the Order service needs to listen to all participants outcome.
+The figure above shows that each services uses its own topic in Kafka. In order to manage the saga, the Order service 
+needs to listen to transaction outcomes from all participants.
 
-The happy path is illustrated diagram:
+## Happy Path
+
+The happy path is illustrated in the diagram below:
 
 ![saga](./images/HappyPath.png)
 
@@ -30,7 +49,7 @@ The happy path is illustrated diagram:
 
 
 
-### Code repositories
+### Code Repositories
 
 The new implementation of the services are done with Quarkus and Microprofile Messaging.
 
