@@ -6,16 +6,26 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="container-service" />
+        <module name="voyage-service" />
         <module name="bpel-saga" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="bpel-saga" target="11" />
+      <module name="container-service" target="11" />
+      <module name="eda-saga-orchestration" target="1.5" />
+      <module name="order-service" target="11" />
+      <module name="voyage-service" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="bpel-saga" options="-parameters" />
+      <module name="container-service" options="-parameters" />
+      <module name="eda-saga-orchestration" options="-parameters" />
+      <module name="order-service" options="-parameters" />
+      <module name="voyage-service" options="" />
     </option>
   </component>
 </project>
