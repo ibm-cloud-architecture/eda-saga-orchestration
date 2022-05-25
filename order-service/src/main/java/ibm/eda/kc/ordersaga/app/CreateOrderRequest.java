@@ -10,9 +10,9 @@ public class CreateOrderRequest
     public String productID;
     public String customerID;
     public int quantity;
-    public Address pickupAddress;
+    public String pickupAddress;
     public String pickupDate;
-    public Address destinationAddress;
+    public String destinationAddress;
     public String expectedDeliveryDate;
     public String creationDate;
     public String updateDate;

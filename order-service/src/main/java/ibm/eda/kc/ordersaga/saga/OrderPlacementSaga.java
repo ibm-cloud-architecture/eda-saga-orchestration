@@ -35,8 +35,8 @@ public class OrderPlacementSaga extends SagaBase
         payload.put("product-id", shippingOrder.productID);
         payload.put("voyage-id", shippingOrder.voyageID);
         payload.put("creation-date", shippingOrder.creationDate);
-        payload.put("destination-address", String.valueOf(shippingOrder.destinationAddress));
-        payload.put("pickup-address", String.valueOf(shippingOrder.pickupAddress));
+        payload.put("destination-address", shippingOrder.destinationAddress);
+        payload.put("pickup-address", shippingOrder.pickupAddress);
         payload.put("expected-delivery-date", shippingOrder.expectedDeliveryDate);
         payload.put("pickup-date", shippingOrder.pickupDate);
         payload.put("update-date", shippingOrder.updateDate);
@@ -46,12 +46,14 @@ public class OrderPlacementSaga extends SagaBase
         return payload;
     }
 
-    public OrderPlacementSaga(Event<ExportedEvent<?, ?>> event, SagaState state) {
+    public OrderPlacementSaga(Event<ExportedEvent<?, ?>> event, SagaState state)
+    {
         super(event, state);
     }
 
     @Override
-    public SagaStepMessage getStepMessage(String id) {
+    public SagaStepMessage getStepMessage(String id)
+    {
         if (id.equals(VOYAGE_RESERVATION)) {
             return new SagaStepMessage(VOYAGE_RESERVATION, REQUEST, getPayload());
         }
@@ -68,8 +70,10 @@ public class OrderPlacementSaga extends SagaBase
         return new SagaStepMessage(CONTAINER_RESERVATION, CANCEL, payload);
     }
 
-    public void onVoyageEvent(VoyageReservationEvent event) {
-        if (alreadyProcessed(event.messageId)) {
+    public void onVoyageEvent(VoyageReservationEvent event)
+    {
+        if (alreadyProcessed(event.messageId))
+        {
             return;
         }
 
@@ -79,8 +83,10 @@ public class OrderPlacementSaga extends SagaBase
         processed(event.messageId);
     }
 
-    public void onContainerEvent(ContainerReservationEvent event) {
-        if (alreadyProcessed(event.messageId)) {
+    public void onContainerEvent(ContainerReservationEvent event)
+    {
+        if (alreadyProcessed(event.messageId))
+        {
             return;
         }
 
@@ -90,8 +96,10 @@ public class OrderPlacementSaga extends SagaBase
         processed(event.messageId);
     }
 
-    private void updateOrderStatus() {
-        if (getStatus() == SagaStatus.COMPLETED) {
+    private void updateOrderStatus()
+    {
+        if (getStatus() == SagaStatus.COMPLETED)
+        {
             ShippingOrder order = ShippingOrder.findById(getOrderId());
             order.status = ShippingOrderStatus.PROCESSING;
         }
