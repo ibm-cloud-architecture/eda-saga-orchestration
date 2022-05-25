@@ -38,11 +38,15 @@
       <artifactId>debezium-quarkus-outbox</artifactId>
       <version>1.9.2.Final</version>
     </dependency>
-    <dependency>
-      <groupId>io.opentracing</groupId>
-      <artifactId>opentracing-api</artifactId>
-      <version>0.33.0</version>
-    </dependency>
+      <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-smallrye-opentracing</artifactId>
+      </dependency>
+<!--    <dependency>-->
+<!--      <groupId>io.opentracing</groupId>-->
+<!--      <artifactId>opentracing-api</artifactId>-->
+<!--      <version>0.33.0</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>io.opentracing.contrib</groupId>
       <artifactId>opentracing-kafka-client</artifactId>
@@ -117,12 +121,14 @@
       <artifactId>gson</artifactId>
       <scope>compile</scope>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>RELEASE</version>
-      <scope>compile</scope>
+      <version>1.18.24</version>
+      <scope>provided</scope>
     </dependency>
+
   </dependencies>
   <build>
     <plugins>
@@ -143,7 +149,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${compiler-plugin.version}</version>
+        <version>3.10.1</version>
         <configuration>
           <compilerArgs>
             <arg>-parameters</arg>
@@ -185,7 +191,7 @@
                   <systemPropertyVariables>
                     <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
                     <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                    <maven.home>${maven.home}</maven.home>
+                    <maven.home>/usr/local/opt/maven/libexec</maven.home>
                   </systemPropertyVariables>
                 </configuration>
               </execution>

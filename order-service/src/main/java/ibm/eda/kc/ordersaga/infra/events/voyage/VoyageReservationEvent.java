@@ -22,6 +22,6 @@ public class VoyageReservationEvent
     @Override
     public String toString()
     {
-        return "CreditApprovalEvent [sagaId=" + sagaId + ", messageId=" + messageId + ", status=" + status + "]";
+        return "VoyageReservationEvent [sagaId=" + sagaId + ", messageId=" + messageId + ", status=" + status + "]";
     }
 }

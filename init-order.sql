@@ -1,1 +1,1 @@
-create schema shipmentorder;
+create schema shippingorder;

@@ -10,6 +10,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.graalvm.nativeimage.c.struct.UniqueLocationIdentity;
 
 import javax.persistence.*;
+import java.util.Map;
 
 /**
  * Represents the order entity
@@ -28,10 +29,13 @@ public class ShippingOrder extends PanacheEntity
     public String customerID;
     public int quantity;
 
-    public Address pickupAddress;
+    //public Map<String, Object> pickupAddress;
+    public String pickupAddress;
     public String pickupDate;
 
-    public Address destinationAddress;
+
+    //public Map<String, Object> destinationAddress;
+    public String destinationAddress;
     public String expectedDeliveryDate;
     public String creationDate;
     public String updateDate;
