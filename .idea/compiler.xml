@@ -25,7 +25,7 @@
       <module name="container-service" options="-parameters" />
       <module name="eda-saga-orchestration" options="-parameters" />
       <module name="order-service" options="-parameters" />
-      <module name="voyage-service" options="" />
+      <module name="voyage-service" options="-parameters" />
     </option>
   </component>
 </project>
