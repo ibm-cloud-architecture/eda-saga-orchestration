@@ -1,56 +1,199 @@
-version: '3.7'
+version: '2.1'
 services:
+  jaeger:
+    image: jaegertracing/all-in-one:1
+    ports:
+      - 6831:6831/udp
+      - 16686:16686
+    networks:
+      - my-network
   zookeeper:
-    image: cp.icr.io/cp/ibm-eventstreams-kafka:11.0.0
-    container_name: zookeeper
-    hostname: zookeeper
-    command: [
-      "sh", "-c",
-      "bin/zookeeper-server-start.sh config/zookeeper.properties"
-    ]
+    image: quay.io/debezium/zookeeper:${DEBEZIUM_VERSION}
     ports:
-      - "2181:2181"
-    environment:
-      LOG_DIR: /tmp/logs
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    networks:
+      - my-network
   kafka:
-    image: cp.icr.io/cp/ibm-eventstreams-kafka:11.0.0
-    container_name: kafka
-    hostname: kafka
-    command: [
-      "sh", "-c",
-      "bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} \
-      --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} \
-      --override listener.security.protocol.map=$${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP} \
-      --override inter.broker.listener.name=$${KAFKA_INTER_BROKER_LISTENER_NAME} \
-      --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}"
-    ]
-    depends_on:
+    image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
+    ports:
+      - 9092:9092
+    links:
       - zookeeper
-    ports:
-      - "9092:9092"
-      - "29092:9092"
     environment:
-      LOG_DIR: "/tmp/logs"
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_LISTENERS: EXTERNAL://0.0.0.0:9092,INTERNAL://kafka:29092
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  addTopics:
-    image:  cp.icr.io/cp/ibm-eventstreams-kafka:10.5.0
-    depends_on:
-      - kafka
-    entrypoint: [ "bash",  "-c", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create  --if-not-exists --replication-factor 1 --partitions 1 --topic orders 
-            && /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create  --if-not-exists --replication-factor 1 --partitions 1 --topic voyages 
-            && /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create  --if-not-exists --replication-factor 1 --partitions 1 --topic reefers"]
-  kafdrop:
-    image: obsidiandynamics/kafdrop
-    container_name: kafdrop
-    restart: "no"
+      - ZOOKEEPER_CONNECT=zookeeper:2181
+    # Set to host IP address when working on the services locally
+      - ADVERTISED_HOST_NAME=10.0.0.30
+    networks:
+      - my-network
+  connect:
+    image: saga-orchestration/debezium-strimzi/strimzi-connect
+    build:
+      context: debezium-strimzi
     ports:
-      - "9000:9000"
-    environment:
-      KAFKA_BROKERCONNECT: "kafka:29092"
-    depends_on:
+      - 8083:8083
+    links:
       - kafka
+      - order-db
+    environment:
+      - KAFKA_LOG4J_OPTS=-Dlog4j.configuration=file:/opt/kafka/config/connect-log4j.properties
+      - KAFKA_CONNECT_BOOTSTRAP_SERVERS=kafka:9092
+      - |
+        KAFKA_CONNECT_CONFIGURATION=
+        key.converter=org.apache.kafka.connect.json.JsonConverter
+        value.converter=org.apache.kafka.connect.json.JsonConverter
+        key.converter.schemas.enable=false
+        value.converter.schemas.enable=false
+        group.id=connect
+        offset.storage.topic=connect-offsets
+        offset.storage.replication.factor=1
+        config.storage.topic=connect-configs
+        config.storage.replication.factor=1
+        status.storage.topic=connect-status
+        status.storage.replication.factor=1
+        consumer.interceptor.classes=io.opentracing.contrib.kafka.TracingConsumerInterceptor
+        producer.interceptor.classes=io.opentracing.contrib.kafka.TracingProducerInterceptor
+      - JAEGER_SERVICE_NAME=kafka-connect
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+      - STRIMZI_TRACING=jaeger
+    command: /opt/kafka/kafka_connect_run.sh
+    networks:
+      - my-network
+  order-db:
+    #image: quay.io/silak/eda-postgres:${DEBEZIUM_VERSION}
+    image: quay.io/debezium/example-postgres:${DEBEZIUM_VERSION}
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: "pg_isready -U orderuser -d orderdb"
+      interval: 2s
+      timeout: 20s
+      retries: 10
+    environment:
+      - POSTGRES_USER=orderuser
+      - POSTGRES_PASSWORD=orderpw
+      - POSTGRES_DB=orderdb
+    volumes:
+      - ./init-order.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - my-network
+  voyage-db:
+    #image: quay.io/silak/eda-postgres:${DEBEZIUM_VERSION}
+    image: quay.io/debezium/example-postgres:${DEBEZIUM_VERSION}
+    ports:
+      - 5434:5432
+    healthcheck:
+      test: "pg_isready -U voyageuser -d voyagedb"
+      interval: 2s
+      timeout: 20s
+      retries: 10
+    environment:
+      - POSTGRES_USER=voyageuser
+      - POSTGRES_PASSWORD=voyagepw
+      - POSTGRES_DB=voyagedb
+    volumes:
+      - ./init-voyage.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - my-network
+  container-db:
+    #image: quay.io/silak/eda-postgres:${DEBEZIUM_VERSION}
+    image: quay.io/debezium/example-postgres:${DEBEZIUM_VERSION}
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: "pg_isready -U containeruser -d containerdb"
+      interval: 2s
+      timeout: 20s
+      retries: 10
+    environment:
+      - POSTGRES_USER=containeruser
+      - POSTGRES_PASSWORD=containerpw
+      - POSTGRES_DB=containerdb
+    volumes:
+      - ./init-container.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - my-network
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - my-network
+  order-service:
+    image: eda-demo/saga-order-service:${DEBEZIUM_VERSION}
+    build:
+      context: order-service
+      dockerfile: src/main/docker/Dockerfile.jvm
+    ports:
+      - 8080:8080
+    links:
+      - kafka
+      - order-db
+      - jaeger
+    environment:
+      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://order-db:5432/orderdb
+      - MP_MESSAGING_INCOMING_CONTAINER_RESPONSE_BOOTSTRAP_SERVERS=kafka:9092
+      - MP_MESSAGING_INCOMING_VOYAGE_RESPONSE_BOOTSTRAP_SERVERS=kafka:9092
+      - JAEGER_SERVICE_NAME=order-service
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+      - JAEGER_AGENT_HOST=jaeger
+    depends_on:
+      order-db:
+        condition: service_healthy
+    networks:
+      - my-network
+  voyage-service:
+    image: eda-demo/saga-voyage-service:${DEBEZIUM_VERSION}
+    build:
+      context: voyage-service
+      dockerfile: src/main/docker/Dockerfile.jvm
+    links:
+      - kafka
+      - voyage-db
+      - jaeger
+    environment:
+      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://voyage-db:5432/voyagedb
+      - MP_MESSAGING_INCOMING_VOYAGE_BOOTSTRAP_SERVERS=kafka:9092
+      - JAEGER_SERVICE_NAME=voyage-service
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+      - JAEGER_AGENT_HOST=jaeger
+    depends_on:
+      voyage-db:
+        condition: service_healthy
+    networks:
+      - my-network
+  container-service:
+    image: eda-demo/saga-container-service:${DEBEZIUM_VERSION}
+    build:
+      context: container-service
+      dockerfile: src/main/docker/Dockerfile.jvm
+    links:
+      - kafka
+      - container-db
+      - jaeger
+    environment:
+      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://container-db:5432/containerdb
+      - MP_MESSAGING_INCOMING_CONTAINER_BOOTSTRAP_SERVERS=kafka:9092
+      - JAEGER_SERVICE_NAME=container-service
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+      - JAEGER_AGENT_HOST=jaeger
+    depends_on:
+      container-db:
+        condition: service_healthy
+    networks:
+      - my-network
+networks:
+  my-network:
+    name: saga-network
