@@ -17,7 +17,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class VoyageEventConverter implements MessageConverter
 {
-    private static final Logger logger = LoggerFactory.getLogger(MessageConverter.class);
+    private static final Logger logger = LoggerFactory.getLogger(VoyageEventConverter.class);
 
     @Override
     public boolean canConvert(Message<?> in, Type target) {

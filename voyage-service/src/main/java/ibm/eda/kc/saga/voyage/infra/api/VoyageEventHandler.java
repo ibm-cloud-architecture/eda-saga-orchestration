@@ -71,7 +71,12 @@ public class VoyageEventHandler
 
         logger.info("status={}", status);
 
-        createVoyage(event, status);
+        //createVoyage(event, status);
+        event.setDestinationPort("blah");
+        event.setFreeSpaceThisLeg(200);
+        event.setPlannedDepartureDate("2022-07-07");
+        event.setShipID("Maersk-1");
+        event.setStatus(status.name());
 
         event.persist();
         logger.info("persisted event ID {}", eventId);

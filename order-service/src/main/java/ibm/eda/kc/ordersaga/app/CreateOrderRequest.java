@@ -1,6 +1,5 @@
 package ibm.eda.kc.ordersaga.app;
 
-import ibm.eda.kc.ordersaga.domain.Address;
 import ibm.eda.kc.ordersaga.domain.ShippingOrder;
 import ibm.eda.kc.ordersaga.domain.ShippingOrderStatus;
 

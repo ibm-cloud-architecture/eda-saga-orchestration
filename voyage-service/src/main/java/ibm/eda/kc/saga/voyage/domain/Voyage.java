@@ -21,6 +21,28 @@ public class Voyage extends PanacheEntity
 {
     @JsonProperty("order-id")
     public Long orderId;
+    @JsonProperty("product-id")
+    public String productID;
+    @JsonProperty("customer-id")
+    public String customerID;
+    @JsonProperty("quantity")
+    public int quantity;
+    @JsonProperty("pickup-address")
+    public String pickupAddress;
+    @JsonProperty("pickup-date")
+    public String pickupDate;
+    @JsonProperty("destination-address")
+    public String destinationAddress;
+    @JsonProperty("expected-delivery")
+    public String expectedDeliveryDate;
+    @JsonProperty("creation-date")
+    public String creationDate;
+    @JsonProperty("update-date")
+    public String updateDate;
+    @JsonProperty("voyage-id")
+    public String voyageID;
+    @JsonProperty("container-id")
+    public String containerID;
 
     @JsonProperty("ship-id")
     public String shipID;

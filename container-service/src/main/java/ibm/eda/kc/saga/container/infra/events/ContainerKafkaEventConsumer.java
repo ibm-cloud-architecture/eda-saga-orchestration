@@ -33,6 +33,12 @@ public class ContainerKafkaEventConsumer
     @Inject
     Tracer tracer;
 
+    /**
+     * Read message on "container" channel
+     * @param message
+     * @return
+     * @throws IOException
+     */
     @Incoming("container")
     public CompletionStage<Void> onMessage(KafkaRecord<String, Container> message) throws IOException {
         return CompletableFuture.runAsync(() -> {

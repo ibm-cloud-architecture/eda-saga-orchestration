@@ -9,7 +9,6 @@
         <module name="container-service" />
         <module name="voyage-service" />
         <module name="order-service" />
-        <module name="bpel-saga" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

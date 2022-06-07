@@ -24,7 +24,7 @@ import java.util.concurrent.CompletionStage;
 @ApplicationScoped
 public class VoyageKafkaEventConsumer
 {
-    private static final Logger LOG = LoggerFactory.getLogger(VoyageKafkaEventConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(VoyageKafkaEventConsumer.class);
 
     @Inject
     VoyageEventHandler voyageEventHandler;
@@ -32,12 +32,18 @@ public class VoyageKafkaEventConsumer
     @Inject
     Tracer tracer;
 
+    /**
+     * Read message on "voyage" channel
+     * @param message
+     * @return
+     * @throws IOException
+     */
     @Incoming("voyage")
     public CompletionStage<Void> onMessage(KafkaRecord<String, Voyage> message) throws IOException {
         return CompletableFuture.runAsync(() -> {
             try (final Scope span = tracer.scopeManager().activate(getOrdersSpanBuilder(message.getHeaders()).start()))
             {
-                LOG.info("Voyage request message with key = {} arrived payload={}", message.getKey(),message.getPayload());
+                logger.info("Voyage request message with key = {} arrived at topic={}", message.getKey(),message.getTopic());
 
                 String eventId = getHeaderAsString(message, "id");
 

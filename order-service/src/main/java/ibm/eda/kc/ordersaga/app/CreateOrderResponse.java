@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 public class CreateOrderResponse
 {
-    private static final Logger logger = LoggerFactory.getLogger(OrderResource.class);
+    private static final Logger logger = LoggerFactory.getLogger(CreateOrderResponse.class);
     public long orderId;
     public ShippingOrderStatus status;
 

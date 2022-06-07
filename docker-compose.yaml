@@ -42,9 +42,9 @@ services:
       - KAFKA_CONNECT_BOOTSTRAP_SERVERS=kafka:9092
       - |
         KAFKA_CONNECT_CONFIGURATION=
-        topic.creation.default.replication.factor=3
-        topic.creation.default.partitions=5
-        auto.create.topics.enable = true
+        errors.tolerance=all
+        errors.deadletterqueue.topic.name=eda.dlq
+        errors.deadletterqueue.topic.replication.factor=1
         key.converter=org.apache.kafka.connect.json.JsonConverter
         value.converter=org.apache.kafka.connect.json.JsonConverter
         key.converter.schemas.enable=false
@@ -65,6 +65,18 @@ services:
       - STRIMZI_TRACING=jaeger
     command: /opt/kafka/kafka_connect_run.sh
     networks:
+      - my-network
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    restart: "no"
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9092"
+    depends_on:
+      - kafka
+    networks:   
       - my-network
   order-db:
     #image: quay.io/silak/eda-postgres:${DEBEZIUM_VERSION}

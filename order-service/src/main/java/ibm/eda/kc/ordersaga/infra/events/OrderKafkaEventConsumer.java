@@ -31,10 +31,16 @@ public class OrderKafkaEventConsumer
     @Inject
     Tracer tracer;
 
-    @Incoming("voyage-response")
+    /**
+     * Read message on "voyageresponse" channel
+     * @param event
+     * @return
+     * @throws IOException
+     */
+    @Incoming("voyageresponse")
     public CompletionStage<Void> onVoyageMessage(VoyageSagaEvent event) throws IOException
     {
-        LOG.info("Incoming voyageresponse event with ID = {} arrived", event.messageId);
+        LOG.info("Incoming voyageresponse with ID = {} arrived with status={}", event.messageId, event.status);
         return CompletableFuture.runAsync(() -> {
             try (final Scope span = tracer.scopeManager().activate(getOrdersSpanBuilder(event.headers).start()))
             {
@@ -43,7 +49,13 @@ public class OrderKafkaEventConsumer
         });
     }
 
-    @Incoming("container-response")
+    /**
+     * Read message on "containerresponse" channel
+     * @param event
+     * @return
+     * @throws IOException
+     */
+    @Incoming("containerresponse")
     public CompletionStage<Void> onContainerMessage(ContainerSagaEvent event) throws IOException
     {
         LOG.info("Incoming containerresponse event with ID = {} arrived", event.messageId);
