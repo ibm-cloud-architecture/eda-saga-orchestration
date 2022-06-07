@@ -16,7 +16,7 @@ import java.util.*;
 
 public abstract class SagaBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SagaBase.class);
+    private static final Logger logger = LoggerFactory.getLogger(SagaBase.class);
 
     private final Event<ExportedEvent<?, ?>> event;
 
@@ -54,25 +54,34 @@ public abstract class SagaBase
      * @param type
      * @param status
      */
-    protected void onStepEvent(String type, SagaStepStatus status) {
-        try {
+    protected void onStepEvent(String type, SagaStepStatus status)
+    {
+        logger.info("in onStepEvent(), status={}",status.name());
+        try
+        {
             ObjectNode stepStatus = (ObjectNode) state.getStepStatus();
             stepStatus.put(type, status.name());
 
-            if (status == SagaStepStatus.SUCCEEDED) {
+            if (status == SagaStepStatus.SUCCEEDED)
+            {
                 advance();
-            } else if (status == SagaStepStatus.FAILED || status == SagaStepStatus.COMPENSATED) {
+            }
+            else if (status == SagaStepStatus.FAILED || status == SagaStepStatus.COMPENSATED)
+            {
                 goBack();
             }
 
             EnumSet<SagaStepStatus> allStatus = EnumSet.noneOf(SagaStepStatus.class);
             Iterator<String> fieldNames = stepStatus.fieldNames();
-            while (fieldNames.hasNext()) {
+            while (fieldNames.hasNext())
+            {
                 allStatus.add(SagaStepStatus.valueOf(stepStatus.get(fieldNames.next()).asText()));
             }
 
             state.setSagaStatus(getSagaStatus(allStatus));
-        } catch (JsonProcessingException e) {
+        }
+        catch (JsonProcessingException e)
+        {
             throw new RuntimeException(e);
         }
     }
@@ -87,7 +96,7 @@ public abstract class SagaBase
     }
 
     protected boolean alreadyProcessed(UUID eventId) {
-        LOG.debug("Looking for event with id {} in message log", eventId);
+        logger.debug("Looking for event with id {} in message log", eventId);
         EntityManager em = JpaOperations.INSTANCE.getEntityManager(ConsumedMessage.class);
         return em.find(ConsumedMessage.class, eventId) != null;
     }
@@ -127,10 +136,12 @@ public abstract class SagaBase
         return true;
     }
 
-    protected final void advance() throws JsonProcessingException {
+    protected final void advance() throws JsonProcessingException
+    {
         String nextStep = getNextStep();
 
-        if (nextStep == null) {
+        if (nextStep == null)
+        {
             state.setCurrentStep(null);
             return;
         }
@@ -141,6 +152,7 @@ public abstract class SagaBase
         ObjectNode stepStatus = (ObjectNode) state.getStepStatus();
         stepStatus.put(nextStep, SagaStepStatus.STARTED.name());
 
+        logger.info("Advancing to saga step {}",nextStep);
         state.setCurrentStep(nextStep);
     }
 

@@ -14,19 +14,19 @@ import javax.transaction.Transactional;
 @ApplicationScoped
 public class OrderPlacementEventHandler
 {
-    private static final Logger LOG = LoggerFactory.getLogger(OrderResource.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderPlacementEventHandler.class);
     @Inject
     Instance<SagaManager> sagaManager;
 
     @Transactional
     public void onVoyageEvent(VoyageSagaEvent event)
     {
-        LOG.info("onVoyageEvent...saga event:\n {}", event.toString());
+        logger.info("onVoyageEvent...saga event:\n {}", event.toString());
         OrderPlacementSaga saga = sagaManager.get().find(OrderPlacementSaga.class, event.sagaId);
 
         if (saga == null)
         {
-            LOG.info("***saga ID {} not found!",event.sagaId);
+            logger.info("***saga ID {} not found!",event.sagaId);
             return;
         }
 
@@ -36,12 +36,12 @@ public class OrderPlacementEventHandler
     @Transactional
     public void onContainerEvent(ContainerSagaEvent event)
     {
-        LOG.info("onContainerEvent: {}", event.toString());
+        logger.info("onContainerEvent: {}", event.toString());
         OrderPlacementSaga saga = sagaManager.get().find(OrderPlacementSaga.class, event.sagaId);
 
         if (saga == null)
         {
-            LOG.info("***saga ID {} not found!",event.sagaId);
+            logger.info("***saga ID {} not found!",event.sagaId);
             return;
         }
 

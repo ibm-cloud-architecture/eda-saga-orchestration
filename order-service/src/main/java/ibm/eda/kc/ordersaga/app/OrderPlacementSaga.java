@@ -123,7 +123,12 @@ public class OrderPlacementSaga extends SagaBase
     {
         if (alreadyProcessed(event.messageId))
         {
+            logger.info("Message ID {} already processed", event.messageId);
             return;
+        }
+        else
+        {
+            logger.info("processing ContainerSagaEvent {}", event.messageId);
         }
 
         // Callback to update Shipping Order status and saga status.

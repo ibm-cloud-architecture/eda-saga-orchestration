@@ -20,9 +20,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
-public class KafkaEventConsumer
+public class OrderKafkaEventConsumer
 {
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaEventConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OrderKafkaEventConsumer.class);
     private static final int RETRIES = 5;
 
     @Inject
@@ -34,7 +34,7 @@ public class KafkaEventConsumer
     @Incoming("voyage-response")
     public CompletionStage<Void> onVoyageMessage(VoyageSagaEvent event) throws IOException
     {
-        LOG.info("Incoming voyage response event with ID = {} arrived", event.messageId);
+        LOG.info("Incoming voyageresponse event with ID = {} arrived", event.messageId);
         return CompletableFuture.runAsync(() -> {
             try (final Scope span = tracer.scopeManager().activate(getOrdersSpanBuilder(event.headers).start()))
             {
@@ -46,7 +46,7 @@ public class KafkaEventConsumer
     @Incoming("container-response")
     public CompletionStage<Void> onContainerMessage(ContainerSagaEvent event) throws IOException
     {
-        LOG.info("Incoming container response event with ID = {} arrived", event.messageId);
+        LOG.info("Incoming containerresponse event with ID = {} arrived", event.messageId);
         return CompletableFuture.runAsync(() -> {
             try (final Scope span = tracer.scopeManager().activate(getOrdersSpanBuilder(event.headers).start()))
             {

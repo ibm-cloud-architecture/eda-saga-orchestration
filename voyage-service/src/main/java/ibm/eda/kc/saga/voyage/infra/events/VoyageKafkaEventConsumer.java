@@ -1,7 +1,7 @@
-package ibm.eda.kc.saga.container.infra.events;
+package ibm.eda.kc.saga.voyage.infra.events;
 
-import ibm.eda.kc.saga.container.domain.Container;
-import ibm.eda.kc.saga.container.infra.api.ContainerEventHandler;
+import ibm.eda.kc.saga.voyage.domain.Voyage;
+import ibm.eda.kc.saga.voyage.infra.api.VoyageEventHandler;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.kafka.TracingKafkaUtils;
@@ -22,26 +22,26 @@ import java.util.concurrent.CompletionStage;
 
 
 @ApplicationScoped
-public class KafkaEventConsumer
+public class VoyageKafkaEventConsumer
 {
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaEventConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(VoyageKafkaEventConsumer.class);
 
     @Inject
-    ContainerEventHandler containerEventHandler;
+    VoyageEventHandler voyageEventHandler;
 
     @Inject
     Tracer tracer;
 
-    @Incoming("container-request")
-    public CompletionStage<Void> onMessage(KafkaRecord<String, Container> message) throws IOException {
+    @Incoming("voyage")
+    public CompletionStage<Void> onMessage(KafkaRecord<String, Voyage> message) throws IOException {
         return CompletableFuture.runAsync(() -> {
             try (final Scope span = tracer.scopeManager().activate(getOrdersSpanBuilder(message.getHeaders()).start()))
             {
-                LOG.debug("Container request message with key = {} arrived", message.getKey());
+                LOG.info("Voyage request message with key = {} arrived payload={}", message.getKey(),message.getPayload());
 
                 String eventId = getHeaderAsString(message, "id");
 
-                containerEventHandler.onReservationEvent(
+                voyageEventHandler.onReservationEvent(
                         UUID.fromString(eventId),
                         UUID.fromString(message.getKey()),
                         message.getPayload()

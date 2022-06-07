@@ -3,7 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/bpel-saga/bpel-saga.iml" filepath="$PROJECT_DIR$/bpel-saga/bpel-saga.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/eda-saga-orchestration.iml" filepath="$PROJECT_DIR$/.idea/eda-saga-orchestration.iml" />
+      <module fileurl="file://$PROJECT_DIR$/container-service/container-service.iml" filepath="$PROJECT_DIR$/container-service/container-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/order-service/order-service.iml" filepath="$PROJECT_DIR$/order-service/order-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/saga-orchestration.iml" filepath="$PROJECT_DIR$/saga-orchestration.iml" />
+      <module fileurl="file://$PROJECT_DIR$/voyage-service/voyage-service.iml" filepath="$PROJECT_DIR$/voyage-service/voyage-service.iml" />
     </modules>
   </component>
 </project>

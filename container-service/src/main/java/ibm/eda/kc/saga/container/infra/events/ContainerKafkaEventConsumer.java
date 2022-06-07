@@ -1,8 +1,8 @@
-package ibm.eda.kc.saga.voyage.infra.events;
+package ibm.eda.kc.saga.container.infra.events;
 
-import ibm.eda.kc.saga.voyage.domain.Voyage;
-import ibm.eda.kc.saga.voyage.domain.VoyageReservationEvent;
-import ibm.eda.kc.saga.voyage.infra.api.VoyageEventHandler;
+import ibm.eda.kc.saga.container.domain.Container;
+import ibm.eda.kc.saga.container.domain.ContainerStatus;
+import ibm.eda.kc.saga.container.infra.api.ContainerEventHandler;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.kafka.TracingKafkaUtils;
@@ -23,26 +23,26 @@ import java.util.concurrent.CompletionStage;
 
 
 @ApplicationScoped
-public class KafkaEventConsumer
+public class ContainerKafkaEventConsumer
 {
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaEventConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ContainerKafkaEventConsumer.class);
 
     @Inject
-    VoyageEventHandler voyageEventHandler;
+    ContainerEventHandler containerEventHandler;
 
     @Inject
     Tracer tracer;
 
-    @Incoming("voyage-request")
-    public CompletionStage<Void> onMessage(KafkaRecord<String, Voyage> message) throws IOException {
+    @Incoming("container")
+    public CompletionStage<Void> onMessage(KafkaRecord<String, Container> message) throws IOException {
         return CompletableFuture.runAsync(() -> {
             try (final Scope span = tracer.scopeManager().activate(getOrdersSpanBuilder(message.getHeaders()).start()))
             {
-                LOG.info("Voyage request message with key = {} arrived payload={}", message.getKey(),message.getPayload());
+                LOG.debug("Container request message with key = {} arrived", message.getKey());
 
                 String eventId = getHeaderAsString(message, "id");
 
-                voyageEventHandler.onReservationEvent(
+                containerEventHandler.onReservationEvent(
                         UUID.fromString(eventId),
                         UUID.fromString(message.getKey()),
                         message.getPayload()

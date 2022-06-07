@@ -1,6 +1,8 @@
 package ibm.eda.kc.ordersaga.app;
 
 import ibm.eda.kc.ordersaga.domain.ShippingOrder;
+import ibm.eda.kc.ordersaga.infra.events.container.ContainerReservedEventPayload;
+import ibm.eda.kc.ordersaga.infra.events.voyage.VoyageReservedEventPayload;
 import ibm.eda.kc.ordersaga.infra.events.voyage.VoyageSagaEvent;
 import ibm.eda.kc.ordersaga.saga.SagaManager;
 import ibm.eda.kc.ordersaga.infra.events.container.ContainerSagaEvent;
@@ -47,15 +49,15 @@ public class OrderResource
         //create a new record in sagastate table
         sagaManager.get().begin(OrderPlacementSaga.class, OrderPlacementSaga.payloadFor(order));
 
-        LOG.info("Order ID {} placed for customer ID {}", req.customerID, order.orderId);
+        LOG.info("Order ID {} placed", req.customerID);
         return CreateOrderResponse.fromShippingOrder(order);
     }
 
     @POST
-    @Path("/container")
+    @Path("/container-reservation")
     @Transactional
     public void onContainerEvent(@HeaderParam("saga-id") UUID sagaId, @HeaderParam("message-id") UUID messageId,
-                                 ContainerSagaEvent event)
+                                 ContainerReservedEventPayload event)
     {
         LOG.info("REST invoke to reserve Container for saga ID {} and message ID {}", sagaId, messageId);
         eventHandler.get().onContainerEvent(new ContainerSagaEvent(sagaId, messageId, event.status, null));
@@ -63,14 +65,13 @@ public class OrderResource
     }
 
     @POST
-    @Path("/voyage")
+    @Path("/voyage-reservation")
     @Transactional
     public void onVoyageEvent(@HeaderParam("saga-id") UUID sagaId, @HeaderParam("message-id") UUID messageId,
-                              VoyageSagaEvent event)
-    //public void onVoyageEvent(@HeaderParam("saga-id") UUID sagaId, @HeaderParam("message-id") UUID messageId)
+                              VoyageReservedEventPayload event)
     {
         LOG.info("REST invoke to reserve Voyage for saga ID {} and message ID {}", sagaId, messageId);
-        eventHandler.get().onVoyageEvent(new VoyageSagaEvent(sagaId, messageId, VoyageReservationStatus.DEFAULT, null));
+        eventHandler.get().onVoyageEvent(new VoyageSagaEvent(sagaId, messageId, event.status, null));
         LOG.info("REST invoke to reserve Voyage for saga ID {} and message ID {} completed", sagaId, messageId);
     }
 }

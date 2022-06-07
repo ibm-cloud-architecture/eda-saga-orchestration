@@ -38,7 +38,7 @@ public class VoyageSagaEvent implements ExportedEvent<String, JsonNode>
 
     @Override
     public String getAggregateType() {
-        return "voyage";
+        return "voyage-reservation";
     }
 
     @Override
