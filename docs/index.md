@@ -2,8 +2,8 @@
 
 ## Context
 Business processes implemented in the Business Process Execution Language (BPEL) describe orchestration of participating services
-using control graphs, variables to main state of long-running processes, sophisticated transaction boundaries and extended 
-support for compensation when the process transitions into an error state. A database is typically used to allow long-running 
+using control graphs, variables modeling state transitions of long-running processes, sophisticated transaction boundaries, and 
+offer extended support for compensation when the process transitions into an error state. A database is typically used to allow long-running 
 processes to execute multiple transactions involving multiple resource managers using two-phase commit to ensure Atomic, 
 Consistent, Isolated, and Durable (ACID) properties.
 
@@ -46,21 +46,21 @@ needs to listen to transaction outcomes from all participants.
 
 The happy path is illustrated in the diagram below:
 
-![saga](./images/HappyPath.png)
+![Happy Path](./images/HappyPath.png)
 
 1. Upon the request to create an order, the OrderServiceSaga creates an order and sends an OrderCreatedEvent to the event broker.
 2. The Saga receives an acknowledgement that the event has been successfully published and gives the caller a new Order ID. 
-3. The next order of things is to reserve a voyage. The Saga issues the command ReserveVoyageCmd.
-4. The VoyagerMS microservice consumes this event which causes it to reserve a voyage.
-5. With a voyage successfully reserved, VoyagerMS sends a VoyageAllocatedEvent to signal successful completion.
+3. The next order of things is to reserve a container. The Saga issues the command ReserveVoyageCmd.
+4. The VoyagerMS microservice consumes this event which causes it to reserve a container.
+5. With a container successfully reserved, VoyagerMS sends a VoyageAllocatedEvent to signal successful completion.
 6. The saga consumes this event which prompts it to transition to the next activity
-7. With a voyage booked we now need a reefer. The Saga reserves a reefer by issuing a ReserveReeferCmd command.
+7. With a container booked we now need a reefer. The Saga reserves a reefer by issuing a ReserveReeferCmd command.
 8. The ContainerMS is in charge of reefer reservations. It verifies availability of reefers, grabs a reefer and responds with a ReeferReservedEvent.
 9. At this point all microservices have successfully executed and the saga ends the transaction with an OrderAssignedEvent.
 
 
 ### Error Path with Compensation
-
+![Happy Path](./images/ErrorPath.png)
 
 
 ### Code Repositories
@@ -69,10 +69,10 @@ The new implementation of the services is done using Quarkus and Microprofile Me
 
 * [Order Microservice](https://github.com/ibm-cloud-architecture/refarch-kc-order-cmd-ms)
 * [Reefer Microsercice](https://github.com/ibm-cloud-architecture/refarch-kc-reefer-ms)
-* [Voyage Microservice](https://github.com/ibm-cloud-architecture/refarch-kc-voyage-ms)
+* [Voyage Microservice](https://github.com/ibm-cloud-architecture/refarch-kc-container-ms)
 
 Each code structure is based on Domain-Driven Design, with clear separation between layers (app, domain, infrastructure)
-allowing each domain layer (order, reefer, and voyage) to be implemented using its own language of choice.
+allowing each domain layer (order, reefer, and container) to be implemented using its own language of choice.
 
 ```
 │   │   │   └── ibm
@@ -102,7 +102,7 @@ allowing each domain layer (order, reefer, and voyage) to be implemented using i
 │   │   │                       │   │   ├── ReeferEvent.java
 │   │   │                       │   │   ├── ReeferEventDeserializer.java
 │   │   │                       │   │   └── ReeferVariablePayload.java
-│   │   │                       │   └── voyage
+│   │   │                       │   └── container
 │   │   │                       │       ├── VoyageAgent.java
 │   │   │                       │       ├── VoyageAllocated.java
 │   │   │                       │       ├── VoyageEvent.java
@@ -120,17 +120,17 @@ The SAGA pattern comes with the tradeoff that a compensation process must also b
 multiple, of the sub transactions fails or does not achieve to complete so that the system rolls back to the initial 
 state before the transaction began.
 
-In our specific case, a new order creation transaction can fail either because we can not find a refrigerator container to be allocated to the order or we can not find a voyage to assigned to the order.
+In our specific case, a new order creation transaction can fail either because we can not find a refrigerator container to be allocated to the order or we can not find a container to assigned to the order.
 
 ### No container
 
 ![no container](images/saga-flow-2.png)
 
-When a new order creation is requested by a customer but there is not a container to be allocated to such order, either because the container(s) do not have enough capacity or there is no container available in the origin port for such order, the compensation process for the order creation transaction is quite simple. The order microservice will not get an answer from the reefer manager, anf after a certain time it will trigger the compensation flow by sending a OrderUpdate with status onHold. The voyage service which may has responded positively before that, may roll back the order to voyage relationship.
+When a new order creation is requested by a customer but there is not a container to be allocated to such order, either because the container(s) do not have enough capacity or there is no container available in the origin port for such order, the compensation process for the order creation transaction is quite simple. The order microservice will not get an answer from the reefer manager, anf after a certain time it will trigger the compensation flow by sending a OrderUpdate with status onHold. The container service which may has responded positively before that, may roll back the order to container relationship.
 
-### No voyage
+### No container
 
-![no voyage](images/saga-flow-3.png)
+![no container](images/saga-flow-3.png)
 
 This case is the sysmetric of the other one. The actions flow remains as expected for the SAGA transaction until the Voyages microservice is not answering after a time period or answering negatively. As a result, the Order Command microservice will transition the order to `OnHold` and emit an OrderUpdateEvent to inform the saga participants. In this case, the Reefer manager is one of those interested parties as it will need to kick off the compensation task, which in this case is nothing more than de-allocate the container to the order to make it available for any other coming order.
 
@@ -178,7 +178,7 @@ chrome https://localhost:9000
 
 * Verify the `voyages` topic
 
-![](./images/voyage-hp.png)
+![](./images/container-hp.png)
 
 * The ShippingOrder should now be in assigned state as the order manager receives the two positive answers from the saga participant.
 
@@ -194,7 +194,7 @@ The order has a pickup city set to Boston, and there is no reefer available at t
 ./e2e/sendNonPossibleOrder.sh
 ```
 
-* Verify order created event reaches voyage and reefer microservices
+* Verify order created event reaches container and reefer microservices
 * Voyage generates a event for voyages allocated.
 
 ## Deploy with Event Streams on OpenShift
