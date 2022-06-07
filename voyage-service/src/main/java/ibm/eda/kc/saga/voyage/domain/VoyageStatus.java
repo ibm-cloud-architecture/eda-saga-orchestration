@@ -1,7 +1,7 @@
 package ibm.eda.kc.saga.voyage.domain;
 
 
-import ibm.eda.kc.ordersaga.infra.api.SagaStepStatus;
+import ibm.eda.kc.saga.voyage.infra.events.order.SagaStepStatus;
 
 public enum VoyageStatus
 {
