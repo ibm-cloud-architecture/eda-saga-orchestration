@@ -1,5 +1,6 @@
 package ibm.eda.kc.ordersaga.infra.serial;
 
+import ibm.eda.kc.ordersaga.infra.events.container.ContainerReservedEventPayload;
 import ibm.eda.kc.ordersaga.infra.events.container.ContainerSagaEvent;
 import io.smallrye.reactive.messaging.MessageConverter;
 import io.smallrye.reactive.messaging.kafka.api.IncomingKafkaRecordMetadata;
@@ -31,7 +32,8 @@ public class ContainerEventConverter implements MessageConverter {
         UUID messageId = UUID.fromString(getHeaderAsString(metadata.getHeaders(), "id"));
         UUID sagaId = UUID.fromString((String) metadata.getKey());
 
-        return in.withPayload(new ContainerSagaEvent(sagaId, messageId, ((ContainerSagaEvent) in.getPayload()).status, metadata.getHeaders()));
+        return in.withPayload(new ContainerSagaEvent(sagaId, messageId,
+                ((ContainerReservedEventPayload) in.getPayload()).status, metadata.getHeaders()));
     }
 
     private String getHeaderAsString(Headers headers, String name) {

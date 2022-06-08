@@ -24,7 +24,7 @@ public class OrderPlacementSaga extends SagaBase
     private static final Logger logger = LoggerFactory.getLogger(OrderPlacementSaga.class);
     private static final String RESERVE = "RESERVE";
     private static final String CANCEL = "CANCEL";
-    protected static final String VOYAGE_RESERVATION = "voyage-reservation";
+    protected static final String VOYAGE_RESERVATION = "voyage-reservationgit add";
     protected static final String CONTAINER_RESERVATION = "container-reservation";
 
     public static JsonNode payloadFor(ShippingOrder shippingOrder)

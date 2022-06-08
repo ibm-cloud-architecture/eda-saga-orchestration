@@ -3,10 +3,12 @@ package ibm.eda.kc.ordersaga.infra.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.time.Instant;
 import java.util.UUID;
 
+@Entity
 public class ConsumedMessage
 {
     private static final Logger logger = LoggerFactory.getLogger(ConsumedMessage.class);

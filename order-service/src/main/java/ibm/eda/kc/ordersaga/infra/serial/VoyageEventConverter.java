@@ -1,5 +1,6 @@
 package ibm.eda.kc.ordersaga.infra.serial;
 
+import ibm.eda.kc.ordersaga.infra.events.voyage.VoyageReservedEventPayload;
 import ibm.eda.kc.ordersaga.infra.events.voyage.VoyageSagaEvent;
 import io.smallrye.reactive.messaging.MessageConverter;
 import io.smallrye.reactive.messaging.kafka.api.IncomingKafkaRecordMetadata;
@@ -36,7 +37,8 @@ public class VoyageEventConverter implements MessageConverter
         UUID sagaId = UUID.fromString((String) metadata.getKey());
         logger.info("Converting voyage payload:\n {}", in.getPayload());
 
-        return in.withPayload(new VoyageSagaEvent(sagaId, messageId, ((VoyageSagaEvent) in.getPayload()).status, metadata.getHeaders()));
+        return in.withPayload(new VoyageSagaEvent(sagaId, messageId,
+                ((VoyageReservedEventPayload) in.getPayload()).status, metadata.getHeaders()));
     }
 
     private String getHeaderAsString(Headers headers, String name) {
