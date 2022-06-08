@@ -1,4 +1,5 @@
-FROM strimzi/kafka:0.20.0-kafka-2.6.0
+FROM quay.io/strimzi/kafka:0.29.0-kafka-3.0.1
+# FROM quay.io/debezium/connect:2.0
 ENV KAFKA_CONNECT_PLUGIN_PATH=/tmp/connect-plugins
 
 RUN mkdir $KAFKA_CONNECT_PLUGIN_PATH &&\

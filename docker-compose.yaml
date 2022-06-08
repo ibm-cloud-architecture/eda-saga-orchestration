@@ -1,6 +1,7 @@
 version: '2.1'
 services:
   jaeger:
+    container_name: jaeger
     image: jaegertracing/all-in-one:1
     ports:
       - 6831:6831/udp
@@ -8,6 +9,8 @@ services:
     networks:
       - my-network
   zookeeper:
+    container_name: zookeeper
+    hostname: zookeeper
     image: quay.io/debezium/zookeeper:${DEBEZIUM_VERSION}
     ports:
       - 2181:2181
@@ -16,6 +19,8 @@ services:
     networks:
       - my-network
   kafka:
+    container_name: kafka
+    hostname: kafka
     image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
     ports:
       - 9092:9092
@@ -25,11 +30,11 @@ services:
       - ZOOKEEPER_CONNECT=zookeeper:2181
     # Set to host IP address when working on the services locally
       - ADVERTISED_HOST_NAME=10.0.0.30
-
     networks:
       - my-network
   connect:
     image: saga-orchestration/debezium-strimzi/strimzi-connect
+    container_name: connect
     build:
       context: debezium-strimzi
     ports:
@@ -43,6 +48,8 @@ services:
       - |
         KAFKA_CONNECT_CONFIGURATION=
         errors.tolerance=all
+        security.protocol=PLAINTEXT
+        bootstrap.servers=kafka:9092
         errors.deadletterqueue.topic.name=eda.dlq
         errors.deadletterqueue.topic.replication.factor=1
         key.converter=org.apache.kafka.connect.json.JsonConverter
@@ -64,6 +71,8 @@ services:
       - JAEGER_SAMPLER_PARAM=1
       - STRIMZI_TRACING=jaeger
     command: /opt/kafka/kafka_connect_run.sh
+    depends_on:
+      - kafka
     networks:
       - my-network
   kafdrop:
